@@ -1,30 +1,32 @@
 map = {}
 
+let colors = []
+for (let i = 0; i < 80; i++) colors.push([Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)])
+
 async function executeModel(url) {
 
-  if (url in map)
-  output = map[url]
-  else{
-    data={'url_or_id': url}
+  if (url in map) output = map[url]
+  else {
+    data = {'url_or_id': url}
     console.log("url_or_id:", url)
     output = fetch("http://ec2-75-101-146-62.compute-1.amazonaws.com/upload/", {
       method: "POST",
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(data)
-      }).then(res => res.json());
-      console.log("object_analysis", output.object_analysis)
-      if (output.object_analysis)
-        map[url] = output;
+    }).then(res => res.json());
+    console.log("object_analysis", output.object_analysis)
+    if (output.object_analysis) map[url] = output;
   }
 
   console.log('Prediction for %s', url);
   console.log('Output', output);
-    return output;
-  }
+  return output;
+}
 
-  chrome.runtime.onMessage.addListener((request, sender, callback) => {
-  executeModel(request.url)
-  .then(result => callback({result: result}))
+chrome.runtime.onMessage.addListener((request, sender, callback) => {
+
+  executeModel(request.url, colors)
+  .then(result => callback({result: result, colors: colors}))
   .catch(err => callback({result: false, err: err.message}));
   
   return true; // needed to make the content script wait for the async processing to complete
