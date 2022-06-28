@@ -1,8 +1,5 @@
 map = {}
 
-let colors = []
-for (let i = 0; i < 80; i++) colors.push([Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)])
-
 async function executeModel(url) {
 
   if (url in map) output = map[url]
@@ -25,8 +22,8 @@ async function executeModel(url) {
 
 chrome.runtime.onMessage.addListener((request, sender, callback) => {
 
-  executeModel(request.url, colors)
-  .then(result => callback({result: result, colors: colors}))
+  executeModel(request.url)
+  .then(result => callback({result: result}))
   .catch(err => callback({result: false, err: err.message}));
   
   return true; // needed to make the content script wait for the async processing to complete

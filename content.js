@@ -7,6 +7,19 @@ let prev_sent = []
 
 let classes = ["person","bicycle","car","motorbike","aeroplane","bus","train","truck","boat","traffic light","fire hydrant","stop sign","parking meter","bench","bird","cat","dog","horse","sheep","cow","elephant","bear","zebra","giraffe","backpack","umbrella","handbag","tie","suitcase","frisbee","skis","snowboard","sports ball","kite","baseball bat","baseball glove","skateboard","surfboard","tennis racket","bottle","wine glass","cup","fork","knife","spoon","bowl","banana","apple","sandwich","orange","broccoli","carrot","hot dog","pizza","donut","cake","chair","sofa","pottedplant","bed","diningtable","toilet","tvmonitor","laptop","mouse","remote","keyboard","cell phone","microwave","oven","toaster","sink","refrigerator","book","clock","vase","scissors","teddy bear","hair drier","toothbrush"]
 
+let no_of_classes = classes.length
+let total_colors = Math.pow(255, 3) - 1
+colors = []
+for (let i = 0; i < no_of_classes; i++) {
+    let this_color = parseInt(total_colors / no_of_classes) * i;
+
+    let r = Math.floor(this_color / Math.pow(255, 2))
+    let g = Math.floor((this_color % Math.pow(255, 2)) / 255)
+    let b = this_color % 255
+
+    colors.push([r, g, b])
+}
+
 function clasifyImages() {
     let imgs = [...images, ...document.getElementsByTagName('img')].unique();
     imgs = imgs.filter((x) => !prev_sent.includes(x));
@@ -50,11 +63,7 @@ function analyzeImage(image) {
         canvas.style.cursor = "pointer";
         canvas.onclick = () => {alert(image.src)}
 
-
         var ctx = canvas.getContext("2d");
-        ctx.beginPath();
-
-
 
         if (response.result.object_analysis)
         if (response.result.object_analysis[0])
@@ -89,24 +98,25 @@ function analyzeImage(image) {
             w = x2 - x1;
             h = y2 - y1;
 
+
+            ctx.beginPath();
             ctx.rect(x, y, w, h);
 
-            color = response.colors[classes.indexOf(classname)]
+            color = colors[classes.indexOf(classname)]
 
             ctx.strokeStyle = `rgb(
                 ${color[0]},
                 ${color[1]},
                 ${color[2]}
             )`
-            // ctx.strokeStyle = 'blue'
             ctx.font = "30px Arial";
             ctx.fillText(classname, x, y);
+            ctx.lineWidth = 5;
+            ctx.stroke();
         }
 
         else console.log("no object detections")
 
-        ctx.lineWidth = 5;
-        ctx.stroke();
 
         if (canvas_exists === false) {
             var body = document.getElementsByTagName("body")[0];
