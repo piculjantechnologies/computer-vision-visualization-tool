@@ -20,7 +20,28 @@ for (let i = 0; i < no_of_classes; i++) {
     colors.push([r, g, b])
 }
 
-function clasifyImages() {
+function extractCoordinates(image, structure) {
+    let max_wh = Math.max(image.width, image.height)
+    let x1 = structure.x1 * max_wh/416;
+    let x2 = structure.x2 * max_wh/416;
+    let y1 = structure.y1 * max_wh/416;
+    let y2 = structure.y2 * max_wh/416;
+    if (image.height > image.width) {
+        x1 = x1 - (image.height - image.width)/2;
+        x2 = x2 - (image.height - image.width)/2;
+    }
+    if (image.width > image.height) {
+        y1 = y1 - (image.width - image.height)/2;
+        y2 = y2 - (image.width - image.height)/2;
+    }
+    x1 = Math.max(0, x1)
+    y1 = Math.max(0, y1)
+    x2 = Math.min(x2, image.width)
+    y2 = Math.min(y2, image.height)
+    return [x1, y1, x2, y2]
+}
+
+function classifyImages() {
     images = [...images, ...document.getElementsByTagName('img')].unique();
 
     /*
@@ -45,195 +66,120 @@ function clasifyImages() {
 }
 
 function validImage(image) {
-  const valid = image.src && image.width > 64 && image.height > 64
-  return valid;
+  return image.src && image.width > 64 && image.height > 64;
 }
 
 function analyzeImage(image) {
-  chrome.runtime.sendMessage({url: image.src}, response => {
-    if (response){
-        // console.log(image)
-        let image_parent = image.parentElement;
-        while (image_parent.tagName !== "A") image_parent = image_parent.parentElement;
+    chrome.runtime.sendMessage({url: image.src}, response => {
+        if (response){
+            let image_parent = image.parentElement;
+            while (image_parent.tagName !== "A") image_parent = image_parent.parentElement;
 
-        var rect = image.getBoundingClientRect();
+            let rect = image.getBoundingClientRect();
 
-        canvas = document.getElementById("canvas" + image.src);
+            let canvas = document.getElementById("canvas" + image.src);
+            let canvas_exists = false
+            if (canvas) canvas_exists = true
+            else {
+                canvas = document.createElement('canvas');
+                canvas.id = "canvas" + image.src;
+            }
 
-        canvas_exists = false
-        if (canvas) {
-            canvas_exists = true
-        }
-        else {
-            canvas = document.createElement('canvas');
-            canvas.id = "canvas" + image.src;
-        }
+            canvas.style.zIndex = 1;
+            canvas.width = image.width;
+            canvas.height = image.height;
+            canvas.style.top = rect.top + window.scrollY + "px"
+            canvas.style.bottom = rect.bottom + window.scrollY + "px"
+            canvas.style.left = rect.left + "px"
+            canvas.style.right = rect.right + "px"
+            canvas.style.position = "absolute";
+            canvas.style.cursor = "pointer";
+            canvas.onclick = () => {
+                console.log("clicked")
+            }
 
-        canvas.style.zIndex = 1;
-        canvas.width = image.width;
-        canvas.height = image.height;
-        canvas.style.top = rect.top + window.scrollY + "px"
-        canvas.style.bottom = rect.bottom + window.scrollY + "px"
-        canvas.style.left = rect.left + "px"
-        canvas.style.right = rect.right + "px"
-        canvas.style.position = "absolute";
-        canvas.style.cursor = "pointer";
-        canvas.onclick = () => {
-            console.log("clicked")
-        }
+            let ctx = canvas.getContext("2d");
 
-        var ctx = canvas.getContext("2d");
+            if (response.result.object_analysis) {
+                if (response.result.object_analysis[0]) {
+                    console.log(response.result)
+                    for (let i = 0; i < response.result.object_analysis[0].length; i++) {
 
-        if (response.result.object_analysis) {
-            if (response.result.object_analysis[0]) {
-                console.log(response.result)
-                for (let i = 0; i < response.result.object_analysis[0].length; i++) {
-                    let classname = response.result.object_analysis[0][i].classname;
-                    let max_wh = Math.max(image.width, image.height)
+                        let coordinates = extractCoordinates(image, response.result.object_analysis[0][i])
+                        let x1 = coordinates[0], y1 = coordinates[1], x2 = coordinates[2], y2 = coordinates[3]
 
-                    let x1 = response.result.object_analysis[0][i].x1*max_wh/416;
-                    let y1 = response.result.object_analysis[0][i].y1*max_wh/416;
-                    let x2 = response.result.object_analysis[0][i].x2*max_wh/416;
-                    let y2 = response.result.object_analysis[0][i].y2*max_wh/416;
+                        ctx.beginPath();
+                        ctx.rect(x1, y1, x2 - x1, y2 - y1);  // x1, y1, width, height
 
-                    if (image.height > image.width) {
-                        x1 = x1 - (image.height - image.width)/2;
-                        x2 = x2 - (image.height - image.width)/2;
+                        let classname = response.result.object_analysis[0][i].classname;
+                        color = colors[classes.indexOf(classname)]
+                        ctx.strokeStyle = `rgb(
+                            ${color[0]},
+                            ${color[1]},
+                            ${color[2]}
+                        )`
+
+                        ctx.font = "30px Arial";
+                        ctx.fillText(classname, x1, y1);
+                        ctx.lineWidth = 5;
+                        ctx.stroke();
                     }
-
-                    if (image.width > image.height) {
-                        y1 = y1 - (image.width - image.height)/2;
-                        y2 = y2 - (image.width - image.height)/2;
-                    }
-
-                    x1 = Math.max(0, x1)
-                    y1 = Math.max(0, y1)
-
-                    x2 = Math.min(x2, image.width)
-                    y2 = Math.min(y2, image.height)
-
-                    console.log(classname, "coordinates", ~~x1, ~~y1, ~~x2, ~~y2)
-                    let x = x1
-                    let y = y1
-                    let w = x2 - x1
-                    let h = y2 - y1
-
-
-                    ctx.beginPath();
-                    ctx.rect(x, y, w, h);
-
-                    color = colors[classes.indexOf(classname)]
-
-                    ctx.strokeStyle = `rgb(
-                        ${color[0]},
-                        ${color[1]},
-                        ${color[2]}
-                    )`
-                    ctx.font = "30px Arial";
-                    ctx.fillText(classname, x, y);
-                    ctx.lineWidth = 5;
-                    ctx.stroke();
                 }
             }
-            else console.log("no object detections")
-        }
 
-        if (response.result.face_analysis) {
-            if (response.result.face_analysis[0]) {
-                for (let i = 0; i < response.result.face_analysis[0].length; i++) {
-                    let max_wh = Math.max(image.width, image.height)
+            if (response.result.face_analysis) {
+                if (response.result.face_analysis[0]) {
+                    for (let i = 0; i < response.result.face_analysis[0].length; i++) {
 
-                    let x1 = response.result.face_analysis[0][i].x1*max_wh/416;
-                    let y1 = response.result.face_analysis[0][i].y1*max_wh/416;
-                    let x2 = response.result.face_analysis[0][i].x2*max_wh/416;
-                    let y2 = response.result.face_analysis[0][i].y2*max_wh/416;
+                        let coordinates = extractCoordinates(image, response.result.face_analysis[0][i])
+                        let x1 = coordinates[0], y1 = coordinates[1], x2 = coordinates[2], y2 = coordinates[3]
 
-                    if (image.height > image.width) {
-                        x1 = x1 - (image.height - image.width)/2;
-                        x2 = x2 - (image.height - image.width)/2;
+                        ctx.beginPath();
+                        ctx.rect(x1, y1, x2 - x1, y2 - y1);  // x1, y1, width, height
+
+                        ctx.strokeStyle = "red";
+                        ctx.font = "30px Arial";
+                        ctx.fillText("face", x1, y1);
+                        ctx.lineWidth = 5;
+                        ctx.stroke();
                     }
-
-                    if (image.width > image.height) {
-                        y1 = y1 - (image.width - image.height)/2;
-                        y2 = y2 - (image.width - image.height)/2;
-                    }
-
-                    x1 = Math.max(0, x1)
-                    y1 = Math.max(0, y1)
-
-                    x2 = Math.min(x2, image.width)
-                    y2 = Math.min(y2, image.height)
-
-                    console.log("coordinates", ~~x1, ~~y1, ~~x2, ~~y2)
-                    let x = x1
-                    let y = y1
-                    let w = x2 - x1
-                    let h = y2 - y1
-
-                    ctx.beginPath();
-                    ctx.rect(x, y, w, h);
-
-                    ctx.strokeStyle = "red";
-                    ctx.font = "30px Arial";
-                    ctx.fillText("face", x, y);
-                    ctx.lineWidth = 5;
-                    ctx.stroke();
                 }
             }
-        }
 
-        if (response.result.pose_estimation_analysis) {
-            if (response.result.pose_estimation_analysis[0]) {
-                for (let i = 0; i < response.result.pose_estimation_analysis[0].length; i++) {
-                    let max_wh = Math.max(image.width, image.height)
+            if (response.result.pose_estimation_analysis) {
+                if (response.result.pose_estimation_analysis[0]) {
+                    for (let i = 0; i < response.result.pose_estimation_analysis[0].length; i++) {
 
-                    let x1 = response.result.pose_estimation_analysis[0][i].x1*max_wh/416;
-                    let y1 = response.result.pose_estimation_analysis[0][i].y1*max_wh/416;
-                    let x2 = response.result.pose_estimation_analysis[0][i].x2*max_wh/416;
-                    let y2 = response.result.pose_estimation_analysis[0][i].y2*max_wh/416;
+                        let coordinates = extractCoordinates(image, response.result.pose_estimation_analysis[0][i])
+                        let x1 = coordinates[0], y1 = coordinates[1], x2 = coordinates[2], y2 = coordinates[3]
 
-                    if (image.height > image.width) {
-                        x1 = x1 - (image.height - image.width)/2;
-                        x2 = x2 - (image.height - image.width)/2;
+                        ctx.beginPath()
+                        ctx.moveTo(x1, y1)
+                        ctx.lineTo(x2, y2)
+                        ctx.strokeStyle = "blue"
+                        ctx.lineWidth = 5
+                        ctx.stroke()
                     }
-
-                    if (image.width > image.height) {
-                        y1 = y1 - (image.width - image.height)/2;
-                        y2 = y2 - (image.width - image.height)/2;
-                    }
-
-                    x1 = Math.max(0, x1)
-                    y1 = Math.max(0, y1)
-                    x2 = Math.min(x2, image.width)
-                    y2 = Math.min(y2, image.height)
-
-                    ctx.beginPath()
-                    ctx.moveTo(x1, y1)
-                    ctx.lineTo(x2, y2)
-                    ctx.strokeStyle = "blue"
-                    ctx.lineWidth = 5
-                    ctx.stroke()
                 }
             }
-        }
 
-        if (canvas_exists === false) {
-            var body = document.getElementsByTagName("body")[0];
-            body.appendChild(canvas);
+            if (canvas_exists === false) {
+                var body = document.getElementsByTagName("body")[0];
+                body.appendChild(canvas);
+            }
         }
-    }
-  });
+    });
 }
 
 window.addEventListener("resize", (images)=>{ 
   clearTimeout(isScrolling);
-  isScrolling = setTimeout(()=>{clasifyImages()}, 500);
+  isScrolling = setTimeout(()=>{classifyImages()}, 500);
 });
 
 
 document.addEventListener("scroll", (images)=>{ 
   clearTimeout(isScrolling);
-  isScrolling = setTimeout(()=>{clasifyImages()}, 500);
+  isScrolling = setTimeout(()=>{classifyImages()}, 500);
 });
 
 
@@ -243,7 +189,7 @@ Array.prototype.unique = function() {
   });
 }
 
-clasifyImages();
+classifyImages();
 
 
 
