@@ -182,6 +182,41 @@ function analyzeImage(image) {
             }
         }
 
+        if (response.result.pose_estimation_analysis) {
+            if (response.result.pose_estimation_analysis[0]) {
+                for (let i = 0; i < response.result.pose_estimation_analysis[0].length; i++) {
+                    let max_wh = Math.max(image.width, image.height)
+
+                    let x1 = response.result.pose_estimation_analysis[0][i].x1*max_wh/416;
+                    let y1 = response.result.pose_estimation_analysis[0][i].y1*max_wh/416;
+                    let x2 = response.result.pose_estimation_analysis[0][i].x2*max_wh/416;
+                    let y2 = response.result.pose_estimation_analysis[0][i].y2*max_wh/416;
+
+                    if (image.height > image.width) {
+                        x1 = x1 - (image.height - image.width)/2;
+                        x2 = x2 - (image.height - image.width)/2;
+                    }
+
+                    if (image.width > image.height) {
+                        y1 = y1 - (image.width - image.height)/2;
+                        y2 = y2 - (image.width - image.height)/2;
+                    }
+
+                    x1 = Math.max(0, x1)
+                    y1 = Math.max(0, y1)
+                    x2 = Math.min(x2, image.width)
+                    y2 = Math.min(y2, image.height)
+
+                    ctx.beginPath()
+                    ctx.moveTo(x1, y1)
+                    ctx.lineTo(x2, y2)
+                    ctx.strokeStyle = "blue"
+                    ctx.lineWidth = 5
+                    ctx.stroke()
+                }
+            }
+        }
+
         if (canvas_exists === false) {
             var body = document.getElementsByTagName("body")[0];
             body.appendChild(canvas);
