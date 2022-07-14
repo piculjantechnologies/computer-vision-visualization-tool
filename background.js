@@ -6,7 +6,7 @@ async function executeModel(url) {
   else {
     data = {'url_or_id': url}
     console.log("url_or_id:", url)
-    output = fetch("http://ec2-75-101-146-62.compute-1.amazonaws.com/upload/", {
+    output = fetch("http://20.127.169.209:8000/upload/", {
       method: "POST",
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(data)
