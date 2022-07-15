@@ -3,7 +3,6 @@ if (!DEBUG) console.log = () => {};
 
 let isScrolling;
 let images = [document.getElementsByTagName('img')];
-let anchor_parents = []
 
 let classes = ["person","bicycle","car","motorbike","aeroplane","bus","train","truck","boat","traffic light","fire hydrant","stop sign","parking meter","bench","bird","cat","dog","horse","sheep","cow","elephant","bear","zebra","giraffe","backpack","umbrella","handbag","tie","suitcase","frisbee","skis","snowboard","sports ball","kite","baseball bat","baseball glove","skateboard","surfboard","tennis racket","bottle","wine glass","cup","fork","knife","spoon","bowl","banana","apple","sandwich","orange","broccoli","carrot","hot dog","pizza","donut","cake","chair","sofa","pottedplant","bed","diningtable","toilet","tvmonitor","laptop","mouse","remote","keyboard","cell phone","microwave","oven","toaster","sink","refrigerator","book","clock","vase","scissors","teddy bear","hair drier","toothbrush"]
 
@@ -44,38 +43,18 @@ function extractCoordinates(image, structure) {
 function classifyImages() {
     images = [...images, ...document.getElementsByTagName('img')].unique();
 
-    /*
-    anchor_parents = []
-    for (let i of images) {
-        console.log("image try", i);
-        let parentElement = i.parentElement;
-        let counter = 3;
-        while (parentElement.nodeName !== "A") {
-            if (counter) {
-                parentElement = parentElement.parentElement;
-                counter--;
-            }
-            else break;
-        }
-        if (parentElement.nodeName === "A") anchor_parents.push(parentElement);
-        else anchor_parents.push(null);
-    }
-     */
-
     images.filter(validImage).forEach(analyzeImage);
 }
 
 function validImage(image) {
-  return image.src && image.width > 64 && image.height > 64;
+    return image.src && image.width > 64 && image.height > 64;
 }
 
 function analyzeImage(image) {
     chrome.runtime.sendMessage({url: image.src}, response => {
         if (response){
-            let image_parent = image.parentElement;
+            let image_parent = image.parentElement;  // TODO: parentNode?
             while (image_parent.tagName !== "A") image_parent = image_parent.parentElement;
-
-            let rect = image.getBoundingClientRect();
 
             let canvas = document.getElementById("canvas" + image.src);
             let canvas_exists = false
@@ -85,24 +64,17 @@ function analyzeImage(image) {
                 canvas.id = "canvas" + image.src;
             }
 
-            canvas.style.zIndex = 1;
             canvas.width = image.width;
             canvas.height = image.height;
-            canvas.style.top = rect.top + window.scrollY + "px"
-            canvas.style.bottom = rect.bottom + window.scrollY + "px"
-            canvas.style.left = rect.left + "px"
-            canvas.style.right = rect.right + "px"
+
             canvas.style.position = "absolute";
             canvas.style.cursor = "pointer";
-            canvas.onclick = () => {
-                console.log("clicked")
-            }
+            canvas.style.zIndex = "1";
 
             let ctx = canvas.getContext("2d");
 
             if (response.result.object_analysis) {
                 if (response.result.object_analysis[0]) {
-                    console.log(response.result)
                     for (let i = 0; i < response.result.object_analysis[0].length; i++) {
 
                         let coordinates = extractCoordinates(image, response.result.object_analysis[0][i])
@@ -112,7 +84,7 @@ function analyzeImage(image) {
                         ctx.rect(x1, y1, x2 - x1, y2 - y1);  // x1, y1, width, height
 
                         let classname = response.result.object_analysis[0][i].classname;
-                        color = colors[classes.indexOf(classname)]
+                        let color = colors[classes.indexOf(classname)]
                         ctx.strokeStyle = `rgb(
                             ${color[0]},
                             ${color[1]},
@@ -184,7 +156,7 @@ document.onclick = (e) => {
     }
 }
 
-window.addEventListener("resize", (images)=>{ 
+window.addEventListener("resize", (images)=>{
 
     let canvases = document.getElementsByTagName("canvas")
     for (let c of canvases) {
@@ -192,12 +164,12 @@ window.addEventListener("resize", (images)=>{
         c.style.left = 0 + "px"
     }
 
-  clearTimeout(isScrolling);
-  isScrolling = setTimeout(()=>{classifyImages()}, 500);
+    clearTimeout(isScrolling);
+    isScrolling = setTimeout(()=>{classifyImages()}, 500);
 });
 
 
-document.addEventListener("scroll", (images)=>{ 
+document.addEventListener("scroll", (images)=>{
 
     let canvases = document.getElementsByTagName("canvas")
     for (let c of canvases) {
@@ -205,15 +177,15 @@ document.addEventListener("scroll", (images)=>{
         c.style.left = 0 + "px"
     }
 
-  clearTimeout(isScrolling);
-  isScrolling = setTimeout(()=>{classifyImages()}, 500);
+    clearTimeout(isScrolling);
+    isScrolling = setTimeout(()=>{classifyImages()}, 500);
 });
 
 
 Array.prototype.unique = function() {
-  return this.filter(function (value, index, self) { 
-    return self.indexOf(value) === index;
-  });
+    return this.filter(function (value, index, self) {
+        return self.indexOf(value) === index;
+    });
 }
 
 classifyImages();
