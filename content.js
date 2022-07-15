@@ -164,8 +164,7 @@ function analyzeImage(image) {
             }
 
             if (canvas_exists === false) {
-                var body = document.getElementsByTagName("body")[0];
-                body.appendChild(canvas);
+                image.parentElement.appendChild(canvas)
             }
         }
     });
