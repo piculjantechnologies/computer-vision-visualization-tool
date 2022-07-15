@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
 
-  "name": "Chrome Extension",
-  "description": "Chrome Extension",
+  "name": "Computer Vision Visualization Tool",
+  "description": "A simple visualization tool for computer vision tasks",
   "author": "",
   "version": "1.0.0",
 
@@ -23,7 +23,10 @@
     }
   ],
 
-  "icons": {
+  "icons": { 
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png" 
   },
 
   "permissions": [
