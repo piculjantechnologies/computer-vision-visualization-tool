@@ -170,6 +170,20 @@ function analyzeImage(image) {
     });
 }
 
+document.onclick = (e) => {
+    let x_ = e.screenX, y_ = e.screenY
+    let clicked = document.elementsFromPoint(x_, y_);
+    let canvas_contained = false
+    while (["CANVAS", "svg", "path"].includes(clicked[0].tagName)) {
+         clicked.shift();
+         if (clicked[0].tagName === "CANVAS") canvas_contained = true
+    }
+    if (x_ !== 0 && y_ !== 0 && canvas_contained) {
+        clicked[0].click();
+        console.log("cl", clicked[0])
+    }
+}
+
 window.addEventListener("resize", (images)=>{ 
   clearTimeout(isScrolling);
   isScrolling = setTimeout(()=>{classifyImages()}, 500);
