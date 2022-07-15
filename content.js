@@ -185,12 +185,26 @@ document.onclick = (e) => {
 }
 
 window.addEventListener("resize", (images)=>{ 
+
+    let canvases = document.getElementsByTagName("canvas")
+    for (let c of canvases) {
+        c.style.top = 0 + "px"
+        c.style.left = 0 + "px"
+    }
+
   clearTimeout(isScrolling);
   isScrolling = setTimeout(()=>{classifyImages()}, 500);
 });
 
 
 document.addEventListener("scroll", (images)=>{ 
+
+    let canvases = document.getElementsByTagName("canvas")
+    for (let c of canvases) {
+        c.style.top = 0 + "px"
+        c.style.left = 0 + "px"
+    }
+
   clearTimeout(isScrolling);
   isScrolling = setTimeout(()=>{classifyImages()}, 500);
 });
