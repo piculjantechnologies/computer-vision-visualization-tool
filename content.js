@@ -64,10 +64,16 @@ function analyzeImage(image) {
                 canvas.id = "canvas" + image.src;
             }
 
+            let rect = image.getBoundingClientRect();
+
             canvas.width = image.width;
             canvas.height = image.height;
 
             canvas.style.position = "absolute";
+
+            canvas.style.left = rect.x + "px";
+            canvas.style.top = rect.y + "px";
+
             canvas.style.cursor = "pointer";
             canvas.style.zIndex = "1";
 
