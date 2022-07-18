@@ -43,7 +43,12 @@ function extractCoordinates(image, structure) {
 function classifyImages() {
     images = [...images, ...document.getElementsByTagName('img')].unique();
 
-    images.filter(validImage).forEach(analyzeImage);
+    images.filter(validImage).forEach((image) => {
+        if (!prev_sent.includes(image)) {
+            prev_sent.push(image);
+            analyzeImage(image);
+        }
+    });
 }
 
 function validImage(image) {
