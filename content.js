@@ -4,6 +4,7 @@ if (!DEBUG) console.log = () => {};
 let isScrolling;
 let images = [document.getElementsByTagName('img')];
 
+let prev_sent = []
 let classes = ["person","bicycle","car","motorbike","aeroplane","bus","train","truck","boat","traffic light","fire hydrant","stop sign","parking meter","bench","bird","cat","dog","horse","sheep","cow","elephant","bear","zebra","giraffe","backpack","umbrella","handbag","tie","suitcase","frisbee","skis","snowboard","sports ball","kite","baseball bat","baseball glove","skateboard","surfboard","tennis racket","bottle","wine glass","cup","fork","knife","spoon","bowl","banana","apple","sandwich","orange","broccoli","carrot","hot dog","pizza","donut","cake","chair","sofa","pottedplant","bed","diningtable","toilet","tvmonitor","laptop","mouse","remote","keyboard","cell phone","microwave","oven","toaster","sink","refrigerator","book","clock","vase","scissors","teddy bear","hair drier","toothbrush"]
 
 let no_of_classes = classes.length
@@ -58,9 +59,6 @@ function validImage(image) {
 function analyzeImage(image) {
     chrome.runtime.sendMessage({url: image.src}, response => {
         if (response){
-            let image_parent = image.parentElement;  // TODO: parentNode?
-            while (image_parent.tagName !== "A") image_parent = image_parent.parentElement;
-
             let canvas = document.getElementById("canvas" + image.src);
             let canvas_exists = false
             if (canvas) canvas_exists = true
@@ -208,26 +206,30 @@ classifyImages();
 
 /**
 const onmutation = (mutations) => {
-  for (let mutation of mutations) {
-    const images = [...mutation.addedNodes]
-      .filter(node => node.nodeType === 1) // 1 = element
-      .map(node => {
-        if (node.tagName === 'IMG') {
-          return [node];
-        } else {
-          const nodes = node.getElementsByTagName('img');
-          if (nodes.length > 0) {
-            return [...nodes];
-          } else {
-            return [];
-          }
-        }
-      })
-      .flat();
+    for (let mutation of mutations) {
+        const images = [...mutation.addedNodes]
+        .filter(node => node.nodeType === 1) // 1 = element
+        .map(node => {
+            if (node.tagName === 'IMG') {
+                return [node];
+            } else {
+                const nodes = node.getElementsByTagName('img');
+                if (nodes.length > 0) return [...nodes];
+                else return [];
+            }
+        })
+        .flat();
 
-    console.log('Page contains %d new images', images.length);
-    images.filter(validImage).forEach(analyzeImage);
-  }
+        // console.log('Page contains %d new images', images.length);
+        // images.filter(validImage).forEach(analyzeImage);
+
+        images.filter(validImage).forEach((image) => {
+            if (!prev_sent.includes(image)) {
+                prev_sent.push(image);
+                analyzeImage(image);
+            }
+        });
+    }
 };
 
 const observer = new MutationObserver(onmutation);
