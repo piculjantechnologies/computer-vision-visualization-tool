@@ -59,28 +59,52 @@ function validImage(image) {
 function analyzeImage(image) {
     chrome.runtime.sendMessage({url: image.src}, response => {
         if (response){
-            let canvas = document.getElementById("canvas" + image.src);
-            let canvas_exists = false
-            if (canvas) canvas_exists = true
-            else {
-                canvas = document.createElement('canvas');
-                canvas.id = "canvas" + image.src;
+
+            console.log(response.result)
+
+            let canvases = []
+            let contexts = []
+            let existing = [false, false, false]
+
+            if (response.result.object_analysis) {
+                if (response.result.object_analysis[0]) {
+                    let c = document.getElementById("canvas" + image.src)
+                    if (c) existing[0] = true;
+                    canvases[0] = document.createElement('canvas');
+                    canvases[0].id = "canvas" + image.src;
+                }
+            }
+
+            if (response.result.face_analysis) {
+                if (response.result.face_analysis[0]) {
+                    let c = document.getElementById("facecanvas" + image.src)
+                    if (c) existing[1] = true;
+                    canvases.push(document.createElement('canvas'))
+                    canvases[1].id = "facecanvas" + image.src
+                }
+            }
+
+            if (response.result.pose_estimation_analysis) {
+                if (response.result.pose_estimation_analysis[0]) {
+                    let c = document.getElementById("posecanvas" + image.src)
+                    if (c) existing[2] = true;
+                    canvases.push(document.createElement('canvas'))
+                    canvases[2].id = "posecanvas" + image.src
+                }
             }
 
             let rect = image.getBoundingClientRect();
 
-            canvas.width = image.width;
-            canvas.height = image.height;
-
-            canvas.style.position = "absolute";
-
-            canvas.style.left = rect.x + "px";
-            canvas.style.top = rect.y + "px";
-
-            canvas.style.cursor = "pointer";
-            canvas.style.zIndex = "1";
-
-            let ctx = canvas.getContext("2d");
+            for (let canvas of canvases) {
+                canvas.width = image.width;
+                canvas.height = image.height;
+                canvas.style.position = "absolute";
+                canvas.style.left = rect.x + "px";
+                canvas.style.top = rect.y + "px";
+                canvas.style.cursor = "pointer";
+                canvas.style.zIndex = "1";
+                contexts.push(canvas.getContext("2d"))
+            }
 
             if (response.result.object_analysis) {
                 if (response.result.object_analysis[0]) {
@@ -89,6 +113,7 @@ function analyzeImage(image) {
                         let coordinates = extractCoordinates(image, response.result.object_analysis[0][i])
                         let x1 = coordinates[0], y1 = coordinates[1], x2 = coordinates[2], y2 = coordinates[3]
 
+                        ctx = contexts[0]
                         ctx.beginPath();
                         ctx.rect(x1, y1, x2 - x1, y2 - y1);  // x1, y1, width, height
 
@@ -115,6 +140,7 @@ function analyzeImage(image) {
                         let coordinates = extractCoordinates(image, response.result.face_analysis[0][i])
                         let x1 = coordinates[0], y1 = coordinates[1], x2 = coordinates[2], y2 = coordinates[3]
 
+                        ctx = contexts[1]
                         ctx.beginPath();
                         ctx.rect(x1, y1, x2 - x1, y2 - y1);  // x1, y1, width, height
 
@@ -124,6 +150,7 @@ function analyzeImage(image) {
                         ctx.lineWidth = 5;
                         ctx.stroke();
                     }
+                    
                 }
             }
 
@@ -134,6 +161,7 @@ function analyzeImage(image) {
                         let coordinates = extractCoordinates(image, response.result.pose_estimation_analysis[0][i])
                         let x1 = coordinates[0], y1 = coordinates[1], x2 = coordinates[2], y2 = coordinates[3]
 
+                        ctx = contexts[2]
                         ctx.beginPath()
                         ctx.moveTo(x1, y1)
                         ctx.lineTo(x2, y2)
@@ -144,9 +172,7 @@ function analyzeImage(image) {
                 }
             }
 
-            if (canvas_exists === false) {
-                image.parentElement.appendChild(canvas)
-            }
+            for (let i = 0; i < canvases.length; i++) if (!existing[i]) image.parentElement.appendChild(canvases[i])
         }
     });
 }
