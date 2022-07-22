@@ -60,50 +60,73 @@ function analyzeImage(image) {
     chrome.runtime.sendMessage({url: image.src}, response => {
         if (response){
 
-            console.log(response.result)
-
-            let canvases = []
-            let contexts = []
+            let canvases = [undefined, undefined, undefined]
+            let contexts = [undefined, undefined, undefined]
             let existing = [false, false, false]
 
             if (response.result.object_analysis) {
-                if (response.result.object_analysis[0]) {
+                if (response.result.object_analysis[0] && response.result.object_analysis[0].length) {
                     let c = document.getElementById("canvas" + image.src)
                     if (c) existing[0] = true;
-                    canvases[0] = document.createElement('canvas');
+                    canvases[0] = document.createElement('canvas')
                     canvases[0].id = "canvas" + image.src;
                 }
             }
 
             if (response.result.face_analysis) {
-                if (response.result.face_analysis[0]) {
+                if (response.result.face_analysis[0] && response.result.face_analysis[0].length) {
                     let c = document.getElementById("facecanvas" + image.src)
                     if (c) existing[1] = true;
-                    canvases.push(document.createElement('canvas'))
+                    canvases[1] = document.createElement('canvas')
                     canvases[1].id = "facecanvas" + image.src
                 }
             }
 
             if (response.result.pose_estimation_analysis) {
-                if (response.result.pose_estimation_analysis[0]) {
+                if (response.result.pose_estimation_analysis[0] && response.result.pose_estimation_analysis[0].length) {
                     let c = document.getElementById("posecanvas" + image.src)
                     if (c) existing[2] = true;
-                    canvases.push(document.createElement('canvas'))
+                    canvases[2] = document.createElement('canvas')
                     canvases[2].id = "posecanvas" + image.src
                 }
             }
 
             let rect = image.getBoundingClientRect();
 
-            for (let canvas of canvases) {
-                canvas.width = image.width;
-                canvas.height = image.height;
-                canvas.style.position = "absolute";
-                canvas.style.left = rect.x + "px";
-                canvas.style.top = rect.y + "px";
-                canvas.style.cursor = "pointer";
-                canvas.style.zIndex = "1";
-                contexts.push(canvas.getContext("2d"))
+            for (let i = 0; i < canvases.length; i++) {
+                let canvas = canvases[i]
+                if (canvas) {
+                    canvas.width = image.width;
+                    canvas.height = image.height;
+                    canvas.style.position = "absolute";
+                    canvas.style.left = rect.x + "px";
+                    canvas.style.top = rect.y + "px";
+                    canvas.style.cursor = "pointer";
+                    canvas.style.zIndex = "1";
+
+                    /*
+                    canvas.addEventListener("click", (e) => {
+                        console.log("canvas clicked")
+                        let x_ = e.screenX, y_ = e.screenY
+                        let clicked = document.elementsFromPoint(x_, y_);
+                        let canvas_contained = false
+                        while (["CANVAS", "svg", "path"].includes(clicked[0].tagName)) {
+                            clicked.shift();
+                            if (clicked[0].tagName === "CANVAS") canvas_contained = true
+                        }
+                        if (x_ !== 0 && y_ !== 0 && canvas_contained) {
+                            console.log("kao")
+                            // clicked[0].click();
+                            console.log("cl", clicked[0])
+                        }
+                    })
+                    */
+
+                    canvas.style.display = "inline-block"
+                    if (i !== 0) canvas.style.display = "none"
+
+                    contexts[i] = canvas.getContext("2d")
+                }
             }
 
             if (response.result.object_analysis) {
@@ -172,23 +195,55 @@ function analyzeImage(image) {
                 }
             }
 
-            for (let i = 0; i < canvases.length; i++) if (!existing[i]) image.parentElement.appendChild(canvases[i])
+            for (let i = 0; i < canvases.length; i++) if (!existing[i] && canvases[i]) image.parentElement.appendChild(canvases[i])
+
+            // toggle between canvases with two buttons
+            canvases = canvases.filter((c) => c !== undefined)
+            let total = canvases.length
+            let active = 0
+
+            // if (total > 1) {
+            if (0) {
+                let image_right = document.createElement('img')
+                image_right.src = chrome.runtime.getURL('resources/next.png')
+                image_right.style.width = "32px"
+                image_right.style.height = "32px"
+                image_right.style.position = "absolute"
+                image_right.style.top = Math.floor(1 * (canvases[0].height - 32) / 2) + "px"
+                image_right.style.zIndex = "3"
+    
+                let image_left = image_right.cloneNode()
+                image_left.style.transform = "rotate(180deg)"
+    
+                image_left.style.left = 0 + "px"
+                image_right.style.left = canvases[0].width -32 + "px"
+    
+                image_left.id = "left"
+                image_right.id = "right"
+    
+                image.parentElement.appendChild(image_left)
+                image.parentElement.appendChild(image_right)
+
+                image_left.addEventListener("click", (e) => {
+                    console.log(e.composedPath())
+                    if (active > 0) {
+                        canvases[active].style.display = "none"
+                        active -= 1;
+                        canvases[active].style.display = "inline-block"
+                    }
+                })
+
+                image_right.addEventListener("click", (e) => {
+                    console.log(e.composedPath())
+                    if (active < total - 1) {
+                        canvases[active].style.display = "none"
+                        active += 1;
+                        canvases[active].style.display = "inline-block"
+                    }
+                })
+            }
         }
     });
-}
-
-document.onclick = (e) => {
-    let x_ = e.screenX, y_ = e.screenY
-    let clicked = document.elementsFromPoint(x_, y_);
-    let canvas_contained = false
-    while (["CANVAS", "svg", "path"].includes(clicked[0].tagName)) {
-         clicked.shift();
-         if (clicked[0].tagName === "CANVAS") canvas_contained = true
-    }
-    if (x_ !== 0 && y_ !== 0 && canvas_contained) {
-        clicked[0].click();
-        console.log("cl", clicked[0])
-    }
 }
 
 window.addEventListener("resize", (images)=>{
