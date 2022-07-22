@@ -104,24 +104,6 @@ function analyzeImage(image) {
                     canvas.style.cursor = "pointer";
                     canvas.style.zIndex = "1";
 
-                    /*
-                    canvas.addEventListener("click", (e) => {
-                        console.log("canvas clicked")
-                        let x_ = e.screenX, y_ = e.screenY
-                        let clicked = document.elementsFromPoint(x_, y_);
-                        let canvas_contained = false
-                        while (["CANVAS", "svg", "path"].includes(clicked[0].tagName)) {
-                            clicked.shift();
-                            if (clicked[0].tagName === "CANVAS") canvas_contained = true
-                        }
-                        if (x_ !== 0 && y_ !== 0 && canvas_contained) {
-                            console.log("kao")
-                            // clicked[0].click();
-                            console.log("cl", clicked[0])
-                        }
-                    })
-                    */
-
                     canvas.style.display = "inline-block"
                     if (i !== 0) canvas.style.display = "none"
 
@@ -203,47 +185,64 @@ function analyzeImage(image) {
             let active = 0
 
             if (total > 1) {
+                let button_right = document.createElement('button')
+                button_right.style.width = "32px"
+                button_right.style.height = "32px"
+                button_right.style.position = "absolute"
+                button_right.style.top = Math.floor(1 * (canvases[0].height - 32) / 2) + "px"
+                button_right.style.zIndex = "3"
+
+                let button_left = button_right.cloneNode()
+                button_left.style.left = 0 + "px"
+                button_right.style.left = canvases[0].width -32 + "px"
+
+
                 let image_right = document.createElement('img')
-                image_right.src = chrome.runtime.getURL('resources/next.png')
                 image_right.style.width = "32px"
                 image_right.style.height = "32px"
-                image_right.style.position = "absolute"
-                image_right.style.top = Math.floor(1 * (canvases[0].height - 32) / 2) + "px"
-                image_right.style.zIndex = "3"
-    
+                image_right.src = chrome.runtime.getURL('resources/next.png')
+
                 let image_left = image_right.cloneNode()
                 image_left.style.transform = "rotate(180deg)"
-    
-                image_left.style.left = 0 + "px"
-                image_right.style.left = canvases[0].width -32 + "px"
-    
+        
                 image_left.id = "left"
                 image_right.id = "right"
+
+                button_left.appendChild(image_left)
+                button_right.appendChild(image_right)
     
-                image.parentElement.appendChild(image_left)
-                image.parentElement.appendChild(image_right)
+                image.parentElement.appendChild(button_left)
+                image.parentElement.appendChild(button_right)
 
                 image_left.addEventListener("click", (e) => {
-                    console.log(e.composedPath())
                     if (active > 0) {
                         canvases[active].style.display = "none"
                         active -= 1;
                         canvases[active].style.display = "inline-block"
                     }
+                    e.stopPropagation()
+                    e.preventDefault()
+                    return false
                 })
 
                 image_right.addEventListener("click", (e) => {
-                    console.log(e.composedPath())
                     if (active < total - 1) {
                         canvases[active].style.display = "none"
                         active += 1;
                         canvases[active].style.display = "inline-block"
                     }
+                    e.stopPropagation()
+                    e.preventDefault()
+                    return false
                 })
             }
         }
     });
 }
+
+document.addEventListener("click", (e) => {
+    // e.preventDefault()
+})
 
 window.addEventListener("resize", (images)=>{
 
