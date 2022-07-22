@@ -186,16 +186,19 @@ function analyzeImage(image) {
 
             if (total > 1) {
                 let button_right = document.createElement('button')
-                button_right.style.width = "32px"
-                button_right.style.height = "32px"
+                button_right.style.width = "36px"
+                button_right.style.minWidth = "36px"
+                button_right.style.height = "36px"
+                button_right.style.minHeight = "36px"
                 button_right.style.position = "absolute"
-                button_right.style.top = Math.floor(1 * (canvases[0].height - 32) / 2) + "px"
+                button_right.style.top = Math.floor(1 * (canvases[0].height - 36) / 2) + "px"
                 button_right.style.zIndex = "3"
+                button_right.style.padding = "0";
+                button_right.style.borderRadius = "16px"
 
                 let button_left = button_right.cloneNode()
                 button_left.style.left = 0 + "px"
-                button_right.style.left = canvases[0].width -32 + "px"
-
+                button_right.style.left = canvases[0].width -36 + "px"
 
                 let image_right = document.createElement('img')
                 image_right.style.width = "32px"
@@ -204,33 +207,27 @@ function analyzeImage(image) {
 
                 let image_left = image_right.cloneNode()
                 image_left.style.transform = "rotate(180deg)"
-        
-                image_left.id = "left"
-                image_right.id = "right"
 
                 button_left.appendChild(image_left)
                 button_right.appendChild(image_right)
-    
                 image.parentElement.appendChild(button_left)
                 image.parentElement.appendChild(button_right)
 
                 image_left.addEventListener("click", (e) => {
-                    if (active > 0) {
-                        canvases[active].style.display = "none"
-                        active -= 1;
-                        canvases[active].style.display = "inline-block"
-                    }
+                    canvases[active].style.display = "none"
+                    if (active > 0) active -= 1
+                    else if (active == 0) active = total - 1
+                    canvases[active].style.display = "inline-block"
                     e.stopPropagation()
                     e.preventDefault()
                     return false
                 })
 
                 image_right.addEventListener("click", (e) => {
-                    if (active < total - 1) {
-                        canvases[active].style.display = "none"
-                        active += 1;
-                        canvases[active].style.display = "inline-block"
-                    }
+                    canvases[active].style.display = "none"
+                    if (active < total - 1) active += 1
+                    else if (active === total - 1) active = 0
+                    canvases[active].style.display = "inline-block"
                     e.stopPropagation()
                     e.preventDefault()
                     return false
@@ -239,10 +236,6 @@ function analyzeImage(image) {
         }
     });
 }
-
-document.addEventListener("click", (e) => {
-    // e.preventDefault()
-})
 
 window.addEventListener("resize", (images)=>{
 
