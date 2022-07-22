@@ -202,8 +202,7 @@ function analyzeImage(image) {
             let total = canvases.length
             let active = 0
 
-            // if (total > 1) {
-            if (0) {
+            if (total > 1) {
                 let image_right = document.createElement('img')
                 image_right.src = chrome.runtime.getURL('resources/next.png')
                 image_right.style.width = "32px"
