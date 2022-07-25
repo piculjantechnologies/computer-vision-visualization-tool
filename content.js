@@ -56,71 +56,42 @@ function validImage(image) {
     return image.src && image.width > 64 && image.height > 64;
 }
 
+function canvasInit(canvas, image, noneFlag) {
+    canvas.width = image.width;
+    canvas.height = image.height;
+    canvas.style.position = "absolute";
+    canvas.style.left = 0 + "px";
+    canvas.style.top = 0 + "px";
+    canvas.style.cursor = "pointer";
+    canvas.style.zIndex = "1";
+    canvas.style.display = "inline-block"
+    if (noneFlag) canvas.style.display = "none"
+    return canvas
+}
+
 function analyzeImage(image) {
     chrome.runtime.sendMessage({url: image.src}, response => {
-        if (response){
+        if (response) {
 
             let canvases = [undefined, undefined, undefined]
-            let contexts = [undefined, undefined, undefined]
             let existing = [false, false, false]
 
             if (response.result.object_analysis) {
                 if (response.result.object_analysis[0] && response.result.object_analysis[0].length) {
-                    let c = document.getElementById("canvas" + image.src)
-                    if (c) existing[0] = true;
+
+                    if (document.getElementById("canvas" + image.src)) existing[0] = true;
                     canvases[0] = document.createElement('canvas')
                     canvases[0].id = "canvas" + image.src;
-                }
-            }
+                    canvases[0] = canvasInit(canvases[0], image, false)
+                    const ctx = canvases[0].getContext("2d")
 
-            if (response.result.face_analysis) {
-                if (response.result.face_analysis[0] && response.result.face_analysis[0].length) {
-                    let c = document.getElementById("facecanvas" + image.src)
-                    if (c) existing[1] = true;
-                    canvases[1] = document.createElement('canvas')
-                    canvases[1].id = "facecanvas" + image.src
-                }
-            }
-
-            if (response.result.pose_estimation_analysis) {
-                if (response.result.pose_estimation_analysis[0] && response.result.pose_estimation_analysis[0].length) {
-                    let c = document.getElementById("posecanvas" + image.src)
-                    if (c) existing[2] = true;
-                    canvases[2] = document.createElement('canvas')
-                    canvases[2].id = "posecanvas" + image.src
-                }
-            }
-
-            let rect = image.getBoundingClientRect();
-
-            for (let i = 0; i < canvases.length; i++) {
-                let canvas = canvases[i]
-                if (canvas) {
-                    canvas.width = image.width;
-                    canvas.height = image.height;
-                    canvas.style.position = "absolute";
-                    canvas.style.left = rect.x + "px";
-                    canvas.style.top = rect.y + "px";
-                    canvas.style.cursor = "pointer";
-                    canvas.style.zIndex = "1";
-
-                    canvas.style.display = "inline-block"
-                    if (i !== 0) canvas.style.display = "none"
-
-                    contexts[i] = canvas.getContext("2d")
-                }
-            }
-
-            if (response.result.object_analysis) {
-                if (response.result.object_analysis[0]) {
                     for (let i = 0; i < response.result.object_analysis[0].length; i++) {
 
                         let coordinates = extractCoordinates(image, response.result.object_analysis[0][i])
                         let x1 = coordinates[0], y1 = coordinates[1], x2 = coordinates[2], y2 = coordinates[3]
 
-                        ctx = contexts[0]
                         ctx.beginPath();
-                        ctx.rect(x1, y1, x2 - x1, y2 - y1);  // x1, y1, width, height
+                        ctx.rect(x1, y1, x2 - x1, y2 - y1);
 
                         let classname = response.result.object_analysis[0][i].classname;
                         let color = colors[classes.indexOf(classname)]
@@ -139,15 +110,21 @@ function analyzeImage(image) {
             }
 
             if (response.result.face_analysis) {
-                if (response.result.face_analysis[0]) {
+                if (response.result.face_analysis[0] && response.result.face_analysis[0].length) {
+
+                    if (document.getElementById("facecanvas" + image.src)) existing[1] = true;
+                    canvases[1] = document.createElement('canvas')
+                    canvases[1].id = "facecanvas" + image.src
+                    canvases[1] = canvasInit(canvases[1], image, true)
+                    const ctx = canvases[1].getContext("2d")
+
                     for (let i = 0; i < response.result.face_analysis[0].length; i++) {
 
                         let coordinates = extractCoordinates(image, response.result.face_analysis[0][i])
                         let x1 = coordinates[0], y1 = coordinates[1], x2 = coordinates[2], y2 = coordinates[3]
 
-                        ctx = contexts[1]
                         ctx.beginPath();
-                        ctx.rect(x1, y1, x2 - x1, y2 - y1);  // x1, y1, width, height
+                        ctx.rect(x1, y1, x2 - x1, y2 - y1);
 
                         ctx.strokeStyle = "red";
                         ctx.font = "30px Arial";
@@ -160,13 +137,19 @@ function analyzeImage(image) {
             }
 
             if (response.result.pose_estimation_analysis) {
-                if (response.result.pose_estimation_analysis[0]) {
+                if (response.result.pose_estimation_analysis[0] && response.result.pose_estimation_analysis[0].length) {
+
+                    if (document.getElementById("posecanvas" + image.src)) existing[2] = true;
+                    canvases[2] = document.createElement('canvas')
+                    canvases[2].id = "posecanvas" + image.src
+                    canvases[2] = canvasInit(canvases[2], image, true)
+                    const ctx = canvases[2].getContext("2d")
+
                     for (let i = 0; i < response.result.pose_estimation_analysis[0].length; i++) {
 
                         let coordinates = extractCoordinates(image, response.result.pose_estimation_analysis[0][i])
                         let x1 = coordinates[0], y1 = coordinates[1], x2 = coordinates[2], y2 = coordinates[3]
 
-                        ctx = contexts[2]
                         ctx.beginPath()
                         ctx.moveTo(x1, y1)
                         ctx.lineTo(x2, y2)
@@ -177,16 +160,10 @@ function analyzeImage(image) {
                 }
             }
 
-            for (let i = 0; i < canvases.length; i++) {
-                if (!existing[i] && canvases[i]) {
-                    canvases[i].style.top = 0 + "px"
-                    canvases[i].style.left = 0 + "px"
-                    image.parentElement.appendChild(canvases[i])
-                }
-            }
+            for (let i = 0; i < canvases.length; i++) if (!existing[i] && canvases[i]) image.parentElement.appendChild(canvases[i])
 
             // toggle between canvases with two buttons
-            canvases = canvases.filter((c) => c !== undefined)
+            canvases = canvases.filter(c => c !== undefined)
             let total = canvases.length
             let active = 0
 
@@ -197,14 +174,14 @@ function analyzeImage(image) {
                 button_right.style.height = "36px"
                 button_right.style.minHeight = "36px"
                 button_right.style.position = "absolute"
-                button_right.style.top = Math.floor(1 * (canvases[0].height - 36) / 2) + "px"
+                button_right.style.top = Math.floor(1 * (image.height - 36) / 2) + "px"
                 button_right.style.zIndex = "3"
                 button_right.style.padding = "0";
                 button_right.style.borderRadius = "16px"
 
                 let button_left = button_right.cloneNode()
                 button_left.style.left = 0 + "px"
-                button_right.style.left = canvases[0].width -36 + "px"
+                button_right.style.left = image.width -36 + "px"
 
                 let image_right = document.createElement('img')
                 image_right.style.width = "32px"
@@ -243,31 +220,10 @@ function analyzeImage(image) {
     });
 }
 
-window.addEventListener("resize", (images)=>{
-
-    let canvases = document.getElementsByTagName("canvas")
-    for (let c of canvases) {
-        c.style.top = 0 + "px"
-        c.style.left = 0 + "px"
-    }
-
+["resize", "scroll"].forEach(e => window.addEventListener(e, () => {
     clearTimeout(isScrolling);
-    isScrolling = setTimeout(()=>{classifyImages()}, 500);
-});
-
-
-document.addEventListener("scroll", (images)=>{
-
-    let canvases = document.getElementsByTagName("canvas")
-    for (let c of canvases) {
-        c.style.top = 0 + "px"
-        c.style.left = 0 + "px"
-    }
-
-    clearTimeout(isScrolling);
-    isScrolling = setTimeout(()=>{classifyImages()}, 500);
-});
-
+    isScrolling = setTimeout(() => { classifyImages() }, 500);
+}))
 
 Array.prototype.unique = function() {
     return this.filter(function (value, index, self) {
