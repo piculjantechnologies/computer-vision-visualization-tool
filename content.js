@@ -168,24 +168,36 @@ function analyzeImage(image) {
             let active = 0
 
             if (total > 1) {
-                let button_right = document.createElement('button')
-                button_right.style.width = "36px"
-                button_right.style.minWidth = "36px"
-                button_right.style.height = "36px"
-                button_right.style.minHeight = "36px"
-                button_right.style.position = "absolute"
-                button_right.style.top = Math.floor(1 * (image.height - 36) / 2) + "px"
-                button_right.style.zIndex = "3"
-                button_right.style.padding = "0";
-                button_right.style.borderRadius = "16px"
 
-                let button_left = button_right.cloneNode()
-                button_left.style.left = 0 + "px"
-                button_right.style.left = image.width -36 + "px"
+                let marginLeft = canvases[0].parentElement.style.marginLeft
+                let marginRight = canvases[0].parentElement.style.marginRight
+                if (marginLeft !== "") marginLeft = parseInt(marginLeft.split('px')[0])
+                if (marginRight !== "") marginRight = parseInt(marginRight.split('px')[0])
+
+                const button = document.createElement('button')
+                button.style.width = "32px"
+                button.style.minWidth = "32px"
+                button.style.height = "32px"
+                button.style.minHeight = "32px"
+                button.style.position = "absolute"
+                button.style.top = Math.floor(1 * (image.height - 32) / 2) + "px"
+                button.style.zIndex = "3"
+                button.style.padding = "0";
+                button.style.borderRadius = "14px"
+
+                let button_left = button.cloneNode()
+                let button_right = button.cloneNode()
+
+                let left = 0
+                if (marginLeft !== "") left -= marginLeft
+                let right = image.width - 32
+                if (marginRight !== "") right += marginRight
+                button_left.style.left = left + "px"
+                button_right.style.left = right + "px"
 
                 let image_right = document.createElement('img')
-                image_right.style.width = "32px"
-                image_right.style.height = "32px"
+                image_right.style.width = "28px"
+                image_right.style.height = "28px"
                 image_right.src = chrome.runtime.getURL('resources/next.png')
 
                 let image_left = image_right.cloneNode()
@@ -201,6 +213,7 @@ function analyzeImage(image) {
                     if (active > 0) active -= 1
                     else if (active == 0) active = total - 1
                     canvases[active].style.display = "inline-block"
+
                     e.stopPropagation()
                     e.preventDefault()
                     return false
@@ -211,6 +224,7 @@ function analyzeImage(image) {
                     if (active < total - 1) active += 1
                     else if (active === total - 1) active = 0
                     canvases[active].style.display = "inline-block"
+
                     e.stopPropagation()
                     e.preventDefault()
                     return false
