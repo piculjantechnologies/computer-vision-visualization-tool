@@ -177,7 +177,13 @@ function analyzeImage(image) {
                 }
             }
 
-            for (let i = 0; i < canvases.length; i++) if (!existing[i] && canvases[i]) image.parentElement.appendChild(canvases[i])
+            for (let i = 0; i < canvases.length; i++) {
+                if (!existing[i] && canvases[i]) {
+                    canvases[i].style.top = 0 + "px"
+                    canvases[i].style.left = 0 + "px"
+                    image.parentElement.appendChild(canvases[i])
+                }
+            }
 
             // toggle between canvases with two buttons
             canvases = canvases.filter((c) => c !== undefined)
