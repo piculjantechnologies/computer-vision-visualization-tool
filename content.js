@@ -59,9 +59,18 @@ function validImage(image) {
 function canvasInit(canvas, image, noneFlag) {
     canvas.width = image.width;
     canvas.height = image.height;
+
+    let computedStyles = window.getComputedStyle(image)
+    let marginLeft = computedStyles.getPropertyValue('margin-left')
+    let marginTop = computedStyles.getPropertyValue('margin-top')
+
+    // force parent element to establish a formatting context
+    // otherwise, position: absolute has different effects
+    image.parentElement.style.position = "relative"
+
     canvas.style.position = "absolute";
-    canvas.style.left = 0 + "px";
-    canvas.style.top = 0 + "px";
+    canvas.style.left = marginLeft;
+    canvas.style.top = marginTop;
     canvas.style.cursor = "pointer";
     canvas.style.zIndex = "1";
     canvas.style.display = "inline-block"
