@@ -4,11 +4,16 @@ if (!DEBUG) console.log = () => {};
 let isScrolling;
 let images = [document.getElementsByTagName('img')];
 
+
+// Array which stores all images previously sent to the server. Used to ensure no image is sent twice
 let prev_sent = []
 let classes = ["person","bicycle","car","motorbike","aeroplane","bus","train","truck","boat","traffic light","fire hydrant","stop sign","parking meter","bench","bird","cat","dog","horse","sheep","cow","elephant","bear","zebra","giraffe","backpack","umbrella","handbag","tie","suitcase","frisbee","skis","snowboard","sports ball","kite","baseball bat","baseball glove","skateboard","surfboard","tennis racket","bottle","wine glass","cup","fork","knife","spoon","bowl","banana","apple","sandwich","orange","broccoli","carrot","hot dog","pizza","donut","cake","chair","sofa","pottedplant","bed","diningtable","toilet","tvmonitor","laptop","mouse","remote","keyboard","cell phone","microwave","oven","toaster","sink","refrigerator","book","clock","vase","scissors","teddy bear","hair drier","toothbrush"]
 
 let no_of_classes = classes.length
 let total_colors = Math.pow(255, 3) - 1
+
+
+// Each class gets its own color by spliting the color wheel into no_of_classes RGB colors.
 colors = []
 for (let i = 0; i < no_of_classes; i++) {
     let this_color = parseInt(total_colors / no_of_classes) * i;
@@ -20,6 +25,13 @@ for (let i = 0; i < no_of_classes; i++) {
     colors.push([r, g, b])
 }
 
+
+/**
+ * Match object recognition coordinates to those of its corresponding image.
+ * @param {Element} image       Image that was analysed
+ * @param {Object} structure    Object recognition data
+ * @returns {Array}             4-element array with relative coordinates
+ */
 function extractCoordinates(image, structure) {
     let max_wh = Math.max(image.width, image.height)
     let x1 = structure.x1 * max_wh/416;
@@ -41,6 +53,10 @@ function extractCoordinates(image, structure) {
     return [x1, y1, x2, y2]
 }
 
+
+/**
+ * Function to collect all unanalysed images and send them to the server for analysis.
+ */
 function classifyImages() {
     images = [...images, ...document.getElementsByTagName('img')].unique();
 
@@ -52,10 +68,24 @@ function classifyImages() {
     });
 }
 
+
+/**
+ * Determine if image is considered valid for analysis.
+ * @param {Element} image 
+ * @returns {Boolean}
+ */
 function validImage(image) {
     return image.src && image.width > 64 && image.height > 64;
 }
 
+
+/**
+ * Add all necessary styles to canvas.
+ * @param {Element} canvas      Empty canvas element
+ * @param {Element} image       Image that was analysed
+ * @param {Boolean} noneFlag    Set canvas display property to none
+ * @returns {Element}           Initialized canvas
+ */
 function canvasInit(canvas, image, noneFlag) {
     canvas.width = image.width;
     canvas.height = image.height;
@@ -64,8 +94,8 @@ function canvasInit(canvas, image, noneFlag) {
     let marginLeft = computedStyles.getPropertyValue('margin-left')
     let marginTop = computedStyles.getPropertyValue('margin-top')
 
-    // force parent element to establish a formatting context
-    // otherwise, position: absolute has different effects
+    // Force parent element to establish a formatting context
+    // Otherwise, position: absolute; has different effects
     image.parentElement.style.position = "relative"
 
     canvas.style.position = "absolute";
@@ -78,6 +108,11 @@ function canvasInit(canvas, image, noneFlag) {
     return canvas
 }
 
+
+/**
+ * Send image over to analysis and inject analysis data into HTML.
+ * @param {Element} image   Image to be analysed
+ */
 function analyzeImage(image) {
     chrome.runtime.sendMessage({url: image.src}, response => {
         if (response) {
