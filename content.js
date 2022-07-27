@@ -212,16 +212,21 @@ function analyzeImage(image) {
             for (let i = 0; i < canvases.length; i++) if (!existing[i] && canvases[i]) image.parentElement.appendChild(canvases[i])
 
             // toggle between canvases with two buttons
-            canvases = canvases.filter(c => c !== undefined)
+            canvases = canvases.filter(c => c !== undefined && c!== null)
             let total = canvases.length
             let active = 0
 
             if (total > 1) {
 
-                let marginLeft = canvases[0].parentElement.style.marginLeft
-                let marginRight = canvases[0].parentElement.style.marginRight
-                if (marginLeft !== "") marginLeft = parseInt(marginLeft.split('px')[0])
-                if (marginRight !== "") marginRight = parseInt(marginRight.split('px')[0])
+                let marginLeft = 0;
+                let marginRight = 0;
+
+                if (canvases[0].parentElement != null) {
+                    marginLeft = canvases[0].parentElement.style.marginLeft
+                    marginRight = canvases[0].parentElement.style.marginRight
+                    if (marginLeft !== "") marginLeft = parseInt(marginLeft.split('px')[0])
+                    if (marginRight !== "") marginRight = parseInt(marginRight.split('px')[0])
+                }
 
                 const button = document.createElement('button')
                 button.style.width = "32px"
