@@ -105,6 +105,11 @@ function canvasInit(canvas, image, noneFlag) {
     canvas.style.zIndex = "1";
     canvas.style.display = "inline-block"
     if (noneFlag) canvas.style.display = "none"
+
+    canvas.addEventListener("click", () => {
+        if (["zoom-in", "zoom-out"].includes(computedStyles.getPropertyValue('cursor'))) image.click();
+    })
+
     return canvas
 }
 
