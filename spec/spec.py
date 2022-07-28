@@ -4,16 +4,25 @@ from flasgger import Swagger
 app = Flask(__name__)
 swagger = Swagger(app)
 
-@app.route('/upload/<url>/', methods=["POST"])
-def colors(palette):
+@app.route('/upload/', methods=["POST"])
+def model():
     """Endpoint returing a prediction object
     ---
     parameters:
       - name: URL
-        in: path
-        type: string
-        required: true
-        description: Path to the image
+        in: body
+        name: request body
+        description: URL to the image
+        schema:
+            type: object
+            required:
+                - url_or_id
+            properties:
+                url_or_id:
+                    type: string
+    consumes:
+        - 'application/json'
+
     definitions:
         Response:
             type: object
@@ -111,11 +120,5 @@ def colors(palette):
         schema:
           $ref: '#/definitions/Response'
     """
-    if palette == 'all':
-        result = None
-    else:
-        result = {}
-
-    return jsonify(result)
 
 app.run(debug=True)
