@@ -90,9 +90,18 @@ function canvasInit(canvas, image, noneFlag) {
     canvas.width = image.width;
     canvas.height = image.height;
 
+    // image may be offset horizontally or vertically
+    // or may not be its parents' first child
+    // so that type of offset also needs to be calculated
     let computedStyles = window.getComputedStyle(image)
     let marginLeft = computedStyles.getPropertyValue('margin-left')
     let marginTop = computedStyles.getPropertyValue('margin-top')
+    const im_rect = image.getBoundingClientRect()
+    const par_rect = image.parentElement.getBoundingClientRect()
+    let image_x_offset = im_rect.left - par_rect.left
+    let image_y_offset = im_rect.top - par_rect.top
+    marginLeft = parseInt(marginLeft.split('px')[0]) + image_x_offset + 'px'
+    marginTop = parseInt(marginTop.split('px')[0]) + image_y_offset + 'px'
 
     // Force parent element to establish a formatting context
     // Otherwise, position: absolute; has different effects
