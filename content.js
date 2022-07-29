@@ -93,15 +93,15 @@ function canvasInit(canvas, image, noneFlag) {
     // image may be offset horizontally or vertically
     // or may not be its parents' first child
     // so that type of offset also needs to be calculated
-    let computedStyles = window.getComputedStyle(image)
-    let marginLeft = computedStyles.getPropertyValue('margin-left')
-    let marginTop = computedStyles.getPropertyValue('margin-top')
+    // let computedStyles = window.getComputedStyle(image)
+    // let marginLeft = computedStyles.getPropertyValue('margin-left')
+    // let marginTop = computedStyles.getPropertyValue('margin-top')
     const im_rect = image.getBoundingClientRect()
     const par_rect = image.parentElement.getBoundingClientRect()
     let image_x_offset = im_rect.left - par_rect.left
     let image_y_offset = im_rect.top - par_rect.top
-    marginLeft = parseInt(marginLeft.split('px')[0]) + image_x_offset + 'px'
-    marginTop = parseInt(marginTop.split('px')[0]) + image_y_offset + 'px'
+    let marginLeft = image_x_offset + 'px'
+    let marginTop = image_y_offset + 'px'
 
     // Force parent element to establish a formatting context
     // Otherwise, position: absolute; has different effects
@@ -116,7 +116,7 @@ function canvasInit(canvas, image, noneFlag) {
     if (noneFlag) canvas.style.display = "none"
 
     canvas.addEventListener("click", () => {
-        if (["zoom-in", "zoom-out"].includes(computedStyles.getPropertyValue('cursor'))) image.click();
+        if (["zoom-in", "zoom-out"].includes(windows.computedStyles.getPropertyValue('cursor'))) image.click();
     })
 
     return canvas
@@ -227,23 +227,13 @@ function analyzeImage(image) {
 
             if (total > 1) {
 
-                let marginLeft = 0;
-                let marginRight = 0;
-
-                if (canvases[0].parentElement != null) {
-                    marginLeft = canvases[0].parentElement.style.marginLeft
-                    marginRight = canvases[0].parentElement.style.marginRight
-                    if (marginLeft !== "") marginLeft = parseInt(marginLeft.split('px')[0])
-                    if (marginRight !== "") marginRight = parseInt(marginRight.split('px')[0])
-                }
-
                 const button = document.createElement('button')
                 button.style.width = "32px"
                 button.style.minWidth = "32px"
                 button.style.height = "32px"
                 button.style.minHeight = "32px"
                 button.style.position = "absolute"
-                button.style.top = Math.floor(1 * (image.height - 32) / 2) + "px"
+                button.style.top = Math.floor(1 * (image.height - 32) / 2) + parseInt(window.getComputedStyle(image).getPropertyValue('margin-top').split('px')[0]) + 'px'
                 button.style.zIndex = "3"
                 button.style.padding = "0";
                 button.style.borderRadius = "14px"
@@ -251,12 +241,10 @@ function analyzeImage(image) {
                 let button_left = button.cloneNode()
                 let button_right = button.cloneNode()
 
-                let left = 0
-                if (marginLeft !== "") left -= marginLeft
-                let right = image.width - 32
-                if (marginRight !== "") right += marginRight
-                button_left.style.left = left + "px"
-                button_right.style.left = right + "px"
+                let left = window.getComputedStyle(image).getPropertyValue('margin-left')
+                let right = parseInt(left.split('px')[0]) + image.width - 32 + 'px'
+                button_left.style.left = left
+                button_right.style.left = right
 
                 let image_right = document.createElement('img')
                 image_right.style.width = "28px"
