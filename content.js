@@ -93,7 +93,7 @@ function canvasInit(canvas, image, noneFlag) {
     // image may be offset horizontally or vertically
     // or may not be its parents' first child
     // so that type of offset also needs to be calculated
-    // let computedStyles = window.getComputedStyle(image)
+    let computedStyles = window.getComputedStyle(image)
     // let marginLeft = computedStyles.getPropertyValue('margin-left')
     // let marginTop = computedStyles.getPropertyValue('margin-top')
     const im_rect = image.getBoundingClientRect()
@@ -116,7 +116,7 @@ function canvasInit(canvas, image, noneFlag) {
     if (noneFlag) canvas.style.display = "none"
 
     canvas.addEventListener("click", () => {
-        if (["zoom-in", "zoom-out"].includes(windows.computedStyles.getPropertyValue('cursor'))) image.click();
+        if (["zoom-in", "zoom-out"].includes(computedStyles.getPropertyValue('cursor'))) image.click();
     })
 
     return canvas
@@ -130,6 +130,8 @@ function canvasInit(canvas, image, noneFlag) {
 function analyzeImage(image) {
     chrome.runtime.sendMessage({url: image.src}, response => {
         if (response) {
+
+            console.log(response)
 
             let canvases = [undefined, undefined, undefined]
             let existing = [false, false, false]
