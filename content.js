@@ -1,3 +1,18 @@
+/*var req = new XMLHttpRequest();
+req.open('GET', document.location, false);
+req.send(null);
+var headers_string = req.getAllResponseHeaders().toLowerCase();
+
+headers = {};
+headers_ = headers_string.split('\r\n')
+for (let i = 0; i < headers_.length; i++) {
+headers_[i] = headers_[i].split(' ');
+headers[headers_[i][0].slice(0, -1)] = headers_[i][1];
+}
+
+if (['image/jpeg', 'image/png', 'image/webp'].includes(headers['content-type'])) {*/
+
+
 const DEBUG = 1;
 if (!DEBUG) console.log = () => {};
 
@@ -34,10 +49,10 @@ for (let i = 0; i < no_of_classes; i++) {
  */
 function extractCoordinates(image, structure) {
     let max_wh = Math.max(image.width, image.height)
-    let x1 = structure.x1 * max_wh/416;
-    let x2 = structure.x2 * max_wh/416;
-    let y1 = structure.y1 * max_wh/416;
-    let y2 = structure.y2 * max_wh/416;
+    let x1 = structure.x1 * max_wh/image.width;
+    let x2 = structure.x2 * max_wh/image.width;
+    let y1 = structure.y1 * max_wh/image.height;
+    let y2 = structure.y2 * max_wh/image.height;
     if (image.height > image.width) {
         x1 = x1 - (image.height - image.width)/2;
         x2 = x2 - (image.height - image.width)/2;
@@ -61,10 +76,9 @@ function classifyImages() {
     images = [...images, ...document.getElementsByTagName('img')].unique();
 
     images.filter(validImage).forEach((image) => {
-        if (!prev_sent.includes(image)) {
-            prev_sent.push(image);
+        //if (!prev_sent.includes(image)) {
             analyzeImage(image);
-        }
+        //}
     });
 }
 
@@ -128,15 +142,19 @@ function canvasInit(canvas, image, noneFlag) {
  * @param {Element} image   Image to be analysed
  */
 function analyzeImage(image) {
+    if (image.src.includes(';base64,'))
+    	return;
+    //prev_sent.push(image);
     chrome.runtime.sendMessage({url: image.src}, response => {
         if (response) {
 
-            console.log(response)
+            //console.log(response)
 
             let canvases = [undefined, undefined, undefined]
             let existing = [false, false, false]
 
             if (response.result.object_analysis) {
+
                 if (response.result.object_analysis[0] && response.result.object_analysis[0].length) {
 
                     if (document.getElementById("canvas" + image.src)) existing[0] = true;
@@ -287,10 +305,14 @@ function analyzeImage(image) {
     });
 }
 
-["resize", "scroll"].forEach(e => window.addEventListener(e, () => {
-    clearTimeout(isScrolling);
+/*["resize", "scroll"].forEach(e => window.addEventListener(e, () => {
+    //clearTimeout(isScrolling);
     isScrolling = setTimeout(() => { classifyImages() }, 500);
-}))
+}))*/
+
+const interval = setInterval(function() {
+   classifyImages()
+ }, 1000);
 
 Array.prototype.unique = function() {
     return this.filter(function (value, index, self) {
@@ -299,7 +321,7 @@ Array.prototype.unique = function() {
 }
 
 classifyImages();
-
+//}
 
 
 // Some images can be dynamically loaded after the page is ready.
