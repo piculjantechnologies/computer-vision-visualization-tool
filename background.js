@@ -1,14 +1,18 @@
 map = {}
 
-async function executeModel(url) {
+async function executeModel(url, token) {
 
   if (url in map) output = map[url]
   else {
     data = {'url_or_id': url}
     console.log("url_or_id:", url)
-    output = fetch("https://api.piculjantechnologies.ai/upload/", {
+    console.log("token:", token)
+        
+    output = fetch("https://cortex4.p.rapidapi.com/upload/", {
       method: "POST",
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'application/json', 
+      		 'X-RapidAPI-Host': 'cortex4.p.rapidapi.com',
+      		 'X-RapidAPI-Key': token},
       body: JSON.stringify(data)
     }).then(res => res.json());
     console.log("object_analysis", output.object_analysis)
@@ -22,7 +26,7 @@ async function executeModel(url) {
 
 chrome.runtime.onMessage.addListener((request, sender, callback) => {
 
-  executeModel(request.url)
+  executeModel(request.url, request.token)
   .then(result => callback({result: result}))
   .catch(err => callback({result: false, err: err.message}));
   

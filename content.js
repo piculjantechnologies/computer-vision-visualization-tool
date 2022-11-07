@@ -12,6 +12,7 @@ headers[headers_[i][0].slice(0, -1)] = headers_[i][1];
 
 if (['image/jpeg', 'image/png', 'image/webp'].includes(headers['content-type'])) {*/
 
+let token = window.prompt("Please enter your token:");
 
 const DEBUG = 1;
 if (!DEBUG) console.log = () => {};
@@ -145,7 +146,7 @@ function analyzeImage(image) {
     if (image.src.includes(';base64,'))
     	return;
     //prev_sent.push(image);
-    chrome.runtime.sendMessage({url: image.src}, response => {
+    chrome.runtime.sendMessage({url: image.src, token: token}, response => {
         if (response) {
 
             //console.log(response)

@@ -4,7 +4,7 @@
   "name": "Computer Vision Visualization Tool",
   "description": "A simple visualization tool for computer vision tasks",
   "author": "",
-  "version": "1.0.1",
+  "version": "1.0.2",
 
   "background": {
     "service_worker": "background.js"
